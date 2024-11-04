@@ -11,7 +11,7 @@ import torch.nn.functional as F
 from torch.nn import Linear, ReLU, Sequential
 from torch_geometric.data import Data
 from torch_geometric.nn import NNConv
-from MolecularRepresentations import *
+from PACCS.MolecularRepresentations import *
 
 
 class PACCS(torch.nn.Module):
@@ -50,7 +50,7 @@ class PACCS(torch.nn.Module):
 def PACCS_train(input_path, epochs, batchsize, output_path):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
-    smiles, adduct, ccs, vpa, mz = read_data(input_path)
+    smiles, adduct, ccs, vpa, mz = input_data(input_path)
     print('## Read data : ',len(smiles))
     
     adduct_SET = list(set(adduct))
