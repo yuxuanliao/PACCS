@@ -9,7 +9,6 @@ import pandas as pd
 import numpy as np
 import torch
 
-
 import rdkit
 from rdkit import Chem
 from rdkit.Chem import Draw
@@ -18,16 +17,33 @@ from rdkit.Chem import rdMolTransforms
 from rdkit.Chem.rdchem import BondType as BT
 
 from tqdm import tqdm
-from parameters import *
+import PACCS.Parameters as parameter
+from multiprocessing.pool import ThreadPool
+
+from PACCS.VoxelProjectedArea import *
 
 
 def input_data(filename,):
     data = pd.read_csv(filename)
     smiles = list(data['SMILES'])
     adduct = list(data['Adduct'])
-    ccs    = list(data['True CCS'])
-    vpa = list(data['VPA'])
-    mz = list(data['mz'])
+    ccs    = list(data['True CCS'])   
+    if 'vpa' in data.columns:
+        vpa = list(data['VPA'])
+    else:
+        pool = ThreadPool(16)
+        re = pool.map(smilesPA, smiles)
+        pool.close()
+        pool.join()
+        vpa = np.mean(re,axis=1)
+        data['VPA'] = vpa
+        data.to_csv('./Data/input_data_vpa.csv', index=False)
+    if 'mz' in data.column:
+        mz = list(data['mz'])
+    else:
+        mz = SmilesMW(smiles, adduct)
+        data['MZ'] = mz
+        data.to_csv('./Data/input_data_mz.csv', index=False)
     return smiles, adduct, ccs, vpa, mz
 
 def Standardization(data):
@@ -42,14 +58,6 @@ def one_of_k_encoding_unk(x, allowable_set):
         x = allowable_set[-1]
     return list(map(lambda s: x == s, allowable_set))
 
-def GetSmilesAtomSet(smiles):
-    All_Atoms = []
-    for i in range(len(smiles)):
-        mol = Chem.MolFromSmiles(smiles[i])
-        All_Atoms += [atom.GetSymbol() for atom in mol.GetAtoms()]
-        All_Atoms = list(set(All_Atoms))
-    All_Atoms.sort()
-    return All_Atoms
 
 def atom_feature_oneHot(atom, All_Atoms, Atom_radius, Atom_mass):
     return np.array(
@@ -82,7 +90,7 @@ def smiles2Graph(smi):
     # 原子特征
     x = []
     for atom in mol.GetAtoms():
-        x.append(atom_feature_oneHot(atom, All_Atoms, Atom_radius, Atom_mass))
+        x.append(atom_feature_oneHot(atom, parameter.All_Atoms, parameter.Atom_radius, parameter.Atom_mass))
     
     row, col, edge_attr = [], [], []
     for bond in mol.GetBonds():
