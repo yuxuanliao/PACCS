@@ -105,10 +105,10 @@ def PACCS_train(input_path, epochs, batchsize, output_path):
                 ).to(device)
     
                 adduct = data['adduct'][0].to(device)
-                gridpa = data['gridpa'][0].to(device)
-                mw = data['wm'][0].to(device)
+                vpa = data['vpa'][0].to(device)
+                mz = data['mz'][0].to(device)
     
-                pred = model(graph, gridpa, mw, adduct)
+                pred = model(graph, vpa, mz, adduct)
     #             loss = F.mse_loss(pred, graph.y)
                 loss = F.huber_loss(pred, graph.y)
                 loss_all.append(loss.cpu().detach().numpy())
@@ -136,10 +136,10 @@ def PACCS_train(input_path, epochs, batchsize, output_path):
                 ).to(device)
             
                 adduct = data['adduct'][0].to(device)
-                gridpa = data['gridpa'][0].to(device)
-                mw = data['wm'][0].to(device)
+                vpa = data['vpa'][0].to(device)
+                mz = data['mz'][0].to(device)
     
-                pred = model(graph, gridpa, mw, adduct)
+                pred = model(graph, vpa, mz, adduct)
                 
                 # pred = model(graph, line_graph, adduct)
                 # loss = F.mse_loss(pred, graph.y)
@@ -151,5 +151,3 @@ def PACCS_train(input_path, epochs, batchsize, output_path):
         print('train-loss', train_loss, 'val-loss', val_loss)
 
         torch.save(model.state_dict(), output_path)
-    
-    

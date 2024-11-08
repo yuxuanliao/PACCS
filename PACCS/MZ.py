@@ -5,8 +5,10 @@ Created on Tue Nov  5 01:29:45 2024
 @author: yxliao
 """
 
-
+import rdkit
 from rdkit import Chem
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*')
 from rdkit.Chem.Descriptors import ExactMolWt
 from tqdm import tqdm
 

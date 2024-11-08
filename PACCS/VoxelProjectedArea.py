@@ -5,6 +5,10 @@ Created on Tue Nov  5 01:27:55 2024
 @author: yxliao
 """
 
+import rdkit
+from rdkit import Chem
+from rdkit import RDLogger
+RDLogger.DisableLog('rdApp.*')
 import rdkit.Chem as Chem
 from rdkit.Chem import AllChem
 import numpy as np

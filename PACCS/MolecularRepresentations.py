@@ -29,22 +29,28 @@ def input_data(filename,):
     adduct = list(data['Adduct'])
     ccs    = list(data['True CCS'])   
     if 'vpa' in data.columns:
-        vpa = list(data['VPA'])
+        vpa = list(data['vpa'])
     else:
         pool = ThreadPool(16)
         re = pool.map(smilesPA, smiles)
         pool.close()
         pool.join()
         vpa = np.mean(re,axis=1)
-        data['VPA'] = vpa
+        data['vpa'] = vpa
         data.to_csv('./Data/input_data_vpa.csv', index=False)
-    if 'mz' in data.column:
+    if 'mz' in data.columns:
         mz = list(data['mz'])
     else:
         mz = SmilesMW(smiles, adduct)
-        data['MZ'] = mz
+        data['mz'] = mz
         data.to_csv('./Data/input_data_mz.csv', index=False)
+
+    if 'vpa' in data.columns and 'mz' in data.columns and data['vpa'].isnull().sum() == 0 and data['mz'].isnull().sum() == 0:
+        print('Data already has vpa and mz columns, no need to export CSV file.')
+    else:
+        data.to_csv('./Data/input_data_vpa_mz.csv', index=False)
     return smiles, adduct, ccs, vpa, mz
+
 
 def Standardization(data):
     data_list = [data[i] for i in data]
@@ -104,7 +110,7 @@ def smiles2Graph(smi):
         # 将键长与原有的边属性结合
         edge_attr += 2 * [one_of_k_encoding_unk(bond.GetBondTypeAsDouble(), [1, 1.5, 2, 3]) + [bond_length]]
         
-    x = torch.tensor(x, dtype=torch.float32)
+    x = torch.tensor(np.array(x), dtype=torch.float32)
     edge_index = torch.tensor([row, col], dtype=torch.long)
     edge_attr = torch.tensor(edge_attr, dtype=torch.float32)
     
