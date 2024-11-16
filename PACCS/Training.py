@@ -47,7 +47,7 @@ class PACCS(torch.nn.Module):
 
         return out
     
-def PACCS_train(input_path, epochs, batchsize, output_path):
+def PACCS_train(input_path, epochs, batchsize, output_model_path):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     
     smiles, adduct, ccs, vpa, mz = input_data(input_path)
@@ -58,6 +58,20 @@ def PACCS_train(input_path, epochs, batchsize, output_path):
     print('## Adduct set order : ', adduct_SET)    
     adduct_one_hot = [(one_of_k_encoding_unk(adduct[_], adduct_SET)) for _ in range(len(adduct))]
     adduct_one_hot = list(np.array(adduct_one_hot).astype(int))
+    
+    xmin = min(vpa)
+    print("min of vpa :", xmin)
+    xmax = max(vpa)
+    print("max of vpa :", xmax)
+    for i, x in enumerate(vpa):
+        vpa[i] = (x-xmin) / (xmax-xmin)
+    
+    wmin = min(mz)
+    print("min of mz :", wmin)
+    wmax = max(mz)
+    print("max of mz :", wmax)
+    for j, m in enumerate(mz):
+        mz[j] = (m-wmin) / (wmax-wmin)
     
     graph_adduct_data = load_representations(smiles, adduct_one_hot, ccs, vpa, mz)
     split_line1 = int(len(ccs) - len(ccs)*0.2)
@@ -141,7 +155,6 @@ def PACCS_train(input_path, epochs, batchsize, output_path):
     
                 pred = model(graph, vpa, mz, adduct)
                 
-                # pred = model(graph, line_graph, adduct)
                 # loss = F.mse_loss(pred, graph.y)
                 loss = F.huber_loss(pred, graph.y)
                 loss_all.append(loss.cpu().detach().numpy())
@@ -150,4 +163,4 @@ def PACCS_train(input_path, epochs, batchsize, output_path):
         
         print('train-loss', train_loss, 'val-loss', val_loss)
 
-        torch.save(model.state_dict(), output_path)
+        torch.save(model.state_dict(), output_model_path)
