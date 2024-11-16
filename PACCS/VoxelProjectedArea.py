@@ -5,7 +5,7 @@ Created on Tue Nov  5 01:27:55 2024
 @author: yxliao
 """
 
-import rdkit
+
 from rdkit import Chem
 from rdkit import RDLogger
 RDLogger.DisableLog('rdApp.*')
@@ -14,7 +14,6 @@ from rdkit.Chem import AllChem
 import numpy as np
 
 import PACCS.Parameters as parameter
-
 
 
 
@@ -48,7 +47,7 @@ def smilesPA(smi, Num=10, cell_radii=0.5, sample_num=100):
         for atom in iMol3D.GetAtoms():
             Symbol = atom.GetSymbol()
             Coord = list(iMol3D.GetConformer().GetAtomPosition(atom.GetIdx()))
-            Coords.append(np.array(Coord) + pos * parameter.atomic_radii[Symbol])
+            Coords.append(np.array(Coord) + pos * parameter.Atomic_radii[Symbol])
 
         Coords = np.vstack(Coords)
         grid = (np.array(Coords) // cell_radii).astype(int)
