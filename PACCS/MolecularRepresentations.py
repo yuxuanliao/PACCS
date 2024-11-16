@@ -9,9 +9,7 @@ import pandas as pd
 import numpy as np
 import torch
 
-import rdkit
 from rdkit import Chem
-from rdkit.Chem import Draw
 from rdkit.Chem import AllChem
 from rdkit.Chem import rdMolTransforms
 from rdkit.Chem.rdchem import BondType as BT
@@ -21,6 +19,7 @@ import PACCS.Parameters as parameter
 from multiprocessing.pool import ThreadPool
 
 from PACCS.VoxelProjectedArea import *
+from PACCS.MZ import *
 
 
 def input_data(filename,):
@@ -45,10 +44,6 @@ def input_data(filename,):
         data['mz'] = mz
         data.to_csv('./Data/input_data_mz.csv', index=False)
 
-    if 'vpa' in data.columns and 'mz' in data.columns and data['vpa'].isnull().sum() == 0 and data['mz'].isnull().sum() == 0:
-        print('Data already has vpa and mz columns, no need to export CSV file.')
-    else:
-        data.to_csv('./Data/input_data_vpa_mz.csv', index=False)
     return smiles, adduct, ccs, vpa, mz
 
 
@@ -79,6 +74,9 @@ def atom_feature_oneHot(atom, All_Atoms, Atom_radius, Atom_mass):
 
 
 def smiles2Graph(smi):
+    Atom_radius = Standardization(parameter.Atom_radius)
+    Atom_mass = Standardization(parameter.Atom_mass)   
+    
     m = Chem.MolFromSmiles(smi)
     mol = Chem.RemoveHs(m)
     mol3D = Chem.AddHs(m)
@@ -93,10 +91,10 @@ def smiles2Graph(smi):
     conf = mol3D.GetConformer()
 
     N = mol.GetNumAtoms()
-    # 原子特征
+
     x = []
     for atom in mol.GetAtoms():
-        x.append(atom_feature_oneHot(atom, parameter.All_Atoms, parameter.Atom_radius, parameter.Atom_mass))
+        x.append(atom_feature_oneHot(atom, parameter.All_Atoms, Atom_radius, Atom_mass))
     
     row, col, edge_attr = [], [], []
     for bond in mol.GetBonds():
@@ -104,10 +102,8 @@ def smiles2Graph(smi):
         row += [start, end]
         col += [end, start]
         
-        # 获取键长
         bond_length = rdMolTransforms.GetBondLength(conf, start, end)
         
-        # 将键长与原有的边属性结合
         edge_attr += 2 * [one_of_k_encoding_unk(bond.GetBondTypeAsDouble(), [1, 1.5, 2, 3]) + [bond_length]]
         
     x = torch.tensor(np.array(x), dtype=torch.float32)
@@ -143,14 +139,4 @@ def load_representations(smiles, adduct_one_hot, ccs, vpa, mz):
         
         Index += 1
     return graph_adduct_data
-
-
-
-
-
-
-
-
-
-
 
