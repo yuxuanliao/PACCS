@@ -87,7 +87,7 @@ def PACCS_predict(input_path, model_path, output_path):
             vpa = data['vpa'][0].to(device)
             mz = data['mz'][0].to(device)
     
-            m_state_dict = torch.load(model_path)
+            m_state_dict = torch.load(model_path, map_location=torch.device('cpu'))
             new_m = PACCS().to(device)
             new_m.load_state_dict(m_state_dict)
             predict_test = new_m(graph, vpa, mz, adduct)
@@ -109,10 +109,3 @@ def PACCS_predict(input_path, model_path, output_path):
         print(f"Lengths - SMILES: {len(smiles)}, Adduct: {len(adduct)}, True CCS: {len(true_ccs)}, Predicted CCS: {len(pred_ccs)}")
 
     re_Metrics = metrics(true_ccs, pred_ccs)
-    
-    
-    
-    
-    
-    
-    
