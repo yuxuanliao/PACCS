@@ -1,6 +1,6 @@
 # PACCS
 
-This is the code repo for the paper *Accurate and Rational Collision Cross Section Prediction using Voxel Projected Area and Deep Learning*.  We developed a method named Projected Area-based CCS prediction method (PACCS), and a [dataset]…… including 8196 CCS values for three different ion adducts ([M+H]+, [M+Na]+ and [M-H]-). For each molecule, there are "SMILES", "Adduct", "ECCS", "grid_PA", "MW" and predicted CCS values of three adduct ion types. 
+This is the code repo for the paper *Accurate and Rational Collision Cross Section Prediction using Voxel Projected Area and Deep Learning*.  We developed a method named Projected Area-based CCS prediction method (PACCS), and a [dataset](data/the_curated_dataset.csv) including 8196 CCS values for three different ion adducts ([M+H]+, [M+Na]+ and [M-H]-). For each molecule, there are "SMILES", "Adduct", "ECCS", "grid_PA", "MW" and predicted CCS values of three adduct ion types. 
 
 ### Package required: 
 We recommend to use [conda](https://conda.io/docs/user-guide/install/download.html) and [pip](https://pypi.org/project/pip/).
@@ -18,7 +18,7 @@ By using the [`requirements/conda/environment.yml`](requirements/conda/environme
     conda activate PACCS
 
 ## Data pre-processing
-PACCS is a model for predicting CCS based on voxel projection area (VPA), so we need to convert SMILES strings to VPA. The related method is shown in ………….          
+PACCS is a model for predicting CCS based on voxel projection area (VPA), so we need to convert SMILES strings to VPA. The related method is shown in [MolecularRepresentations.py](PACCS/MolecularRepresentations.py), [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py) and [MZ.py](PACCS/MZ.py)        
 
 **1.** Generate 3D conformations of molecules. 
 
@@ -35,35 +35,38 @@ PACCS is a model for predicting CCS based on voxel projection area (VPA), so we 
 - [EmbedMultipleConfs](https://www.rdkit.org/docs/source/rdkit.Chem.rdDistGeom.html?highlight=embedmultipleconfs#rdkit.Chem.rdDistGeom.EmbedMultipleConfs), use distance geometry to obtain multiple sets of coordinates for a molecule.
 - [MMFFOptimizeMoleculeConfs](https://www.rdkit.org/docs/source/rdkit.Chem.rdForceFieldHelpers.html?highlight=mmffoptimizemoleculeconfs#rdkit.Chem.rdForceFieldHelpers.MMFFOptimizeMoleculeConfs), uses MMFF to optimize all of a molecule’s conformations
 
-**2.** Generate VPA. For details, see …….    
+**2.** Generate VPA. For details, see [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py). 
+
+<img src="Voxel projection.png" width:100px>
+
 - Using function fibonacci_sphere to get spheroidal coordinates of atoms.
 - Projected on three coordinate planes (xy, xz, yz).
 - Averaging.
 
 ## Model training
-Train the model based on your own training dataset with …… function.
+Train the model based on your own training dataset with [Training.py](PACCS/Training.py) function.
 
-    Model_train(ifile, ParameterPath, ofile, ofileDataPath, EPOCHS, BATCHS, Vis, All_Atoms=[], adduct_SET=[])
+    PACCS_train(input_path, epochs, batchsize, output_model_path)
 
 *Optionnal args*
-- ifile : File path for storing the data of smiles and adduct.
-- ofile : File path where the model is stored.
-- ParameterPath : Save path of related data parameters.
-- ofileDataPath : File path for storing model parameter data.
+- input_path : File path for storing the data of smiles and adduct.
+- Parameters : Selected hyperparameters (epochs, batchsize).
+- output_model_path : File path where the model is stored.
 
 ## Predicting CCS
-The CCS prediction of the molecule is obtained by feeding the Graph and Adduct into the already trained SigmaCCS model with …… function.
+The CCS prediction of the molecule is obtained by feeding the Graph and Adduct into the already trained SigmaCCS model with [Prediction.py](PACCS/Prediction.py).
 
-    Model_prediction(ifile, ParameterPath, mfileh5, ofile, Isevaluate = 0)
+    PACCS_predict(input_path, model_path, output_path)
 
 *Optionnal args*
-- ifile : File path for storing the data of smiles and adduct
-- ParameterPath : File path for storing model parameter data
-- mfileh5 : File path where the model is stored
-- ofile : Path to save ccs prediction values
+- input_path : File path for storing the data of smiles and adduct
+- model_path : File path where the model is stored
+- output_path : Path to save ccs prediction values
 
 ## Usage
-The example codes for usage is included in the [test.ipynb](test.ipynb)
+The example code for model training is included in the [Model training.ipynb](Model training.ipynb). By directly running [train.ipynb](SigmaCCS2/train.ipynb), user can train the model based on your own training dataset.
+
+The example code for CCS prediction is included in the [CCS prediction.ipynb](CCS prediction.ipynb). By directly running [Prediction.py](PACCS/Prediction.py), user can use PACCS to predict CCS values.
 
 ## Information of maintainers
 - zmzhang@csu.edu.cn
