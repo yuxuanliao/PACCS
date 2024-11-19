@@ -64,9 +64,9 @@ The CCS prediction of the molecule is obtained by feeding the Graph and Adduct i
 - output_path : Path to save ccs prediction values
 
 ## Usage
-The example code for model training is included in the [Model training.ipynb](Model training.ipynb). By directly running [train.ipynb](SigmaCCS2/train.ipynb), user can train the model based on your own training dataset.
+The example code for model training is included in the [Model training.ipynb](Model%20training.ipynb). By directly running [train.ipynb](PACCS/train.ipynb), user can train the model based on your own training dataset.
 
-The example code for CCS prediction is included in the [CCS prediction.ipynb](CCS prediction.ipynb). By directly running [Prediction.py](PACCS/Prediction.py), user can use PACCS to predict CCS values.
+The example code for CCS prediction is included in the [CCS prediction.ipynb](CCS%20prediction.ipynb). By directly running [Prediction.py](PACCS/Prediction.py), user can use PACCS to predict CCS values.
 
 ## Information of maintainers
 - zmzhang@csu.edu.cn
