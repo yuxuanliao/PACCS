@@ -1,6 +1,6 @@
 # PACCS
 
-This is the code repo for the paper *Accurate and Rational Collision Cross Section Prediction using Voxel Projected Area and Deep Learning*.  We developed a method named Projected Area-based CCS prediction method (PACCS), and a [dataset](data/the_curated_dataset.csv) including 8196 CCS values for three different ion adducts ([M+H]+, [M+Na]+ and [M-H]-). For each molecule, there are "SMILES", "Adduct", "ECCS", "grid_PA", "MW" and predicted CCS values of three adduct ion types. 
+This is the code repo for the paper *Accurate and Rational Collision Cross Section Prediction using Voxel Projected Area and Deep Learning*.  We developed a method named Projected Area-based CCS prediction method (PACCS), and a [dataset](data/the_curated_dataset.csv) including 8196 CCS values for three different ion adducts ([M+H]<sup>+</sup>, [M+Na]<sup>+</sup> and [M-H]<sup>-</sup>). For each molecule, there are SMILES, Adduct, True CCS, vpa, mz and predicted CCS values of three adduct ion types. 
 
 ### Package required: 
 We recommend to use [conda](https://conda.io/docs/user-guide/install/download.html) and [pip](https://pypi.org/project/pip/).
@@ -18,7 +18,7 @@ By using the [`requirements/conda/environment.yml`](requirements/conda/environme
     conda activate PACCS
 
 ## Data pre-processing
-PACCS is a model for predicting CCS based on voxel projection area (VPA), so we need to convert SMILES strings to VPA. The related method is shown in [MolecularRepresentations.py](PACCS/MolecularRepresentations.py), [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py) and [MZ.py](PACCS/MZ.py)        
+PACCS is a model for predicting CCS based on voxel projected area (vpa), so we need to convert SMILES strings to vpa. The related method is shown in [MolecularRepresentations.py](PACCS/MolecularRepresentations.py), [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py) and [MZ.py](PACCS/MZ.py)        
 
 **1.** Generate 3D conformations of molecules. 
 
@@ -37,9 +37,9 @@ PACCS is a model for predicting CCS based on voxel projection area (VPA), so we 
 
 **2.** Generate VPA. For details, see [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py). 
 
-<img src="Voxel projection.png" width:100px>
+<img src="Voxel projected area.png" width:100px>
 
-- Using function fibonacci_sphere to get spheroidal coordinates of atoms.
+- Using the Fibonacci grids approach to distribute points evenly over the surfaces of 3D atomic spheres. 
 - Projected on three coordinate planes (xy, xz, yz).
 - Averaging.
 
@@ -67,6 +67,8 @@ The CCS prediction of the molecule is obtained by feeding the Graph and Adduct i
 The example code for model training is included in the [Model training.ipynb](Model%20training.ipynb). By directly running [train.ipynb](PACCS/train.ipynb), user can train the model based on your own training dataset.
 
 The example code for CCS prediction is included in the [CCS prediction.ipynb](CCS%20prediction.ipynb). By directly running [Prediction.py](PACCS/Prediction.py), user can use PACCS to predict CCS values.
+
+The example code for CCS prediction can use PACCS to predict CCS values by colab link [prediction.ipynb](https://colab.research.google.com/drive/1iln8N-JnBtywVOcLsHyKY-ImmpuMTXTc)).
 
 ## Information of maintainers
 - zmzhang@csu.edu.cn
