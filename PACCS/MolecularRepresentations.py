@@ -47,12 +47,22 @@ def input_data(filename,):
     return smiles, adduct, ccs, vpa, mz
 
 
+def input_data_woeccs(filename,):
+    data = pd.read_csv(filename)
+    smiles = list(data['SMILES'])
+    adduct = list(data['Adduct'])
+    vpa = list(data['vpa'])
+    mz = list(data['mz'])
+    return smiles, adduct, vpa, mz
+
+
 def Standardization(data):
     data_list = [data[i] for i in data]
     Max_data, Min_data = np.max(data_list), np.min(data_list)
     for i in data:
         data[i] = (data[i] - Min_data) / (Max_data - Min_data)
     return data
+
 
 def one_of_k_encoding_unk(x, allowable_set):
     if x not in allowable_set:
@@ -116,6 +126,7 @@ def smiles2Graph(smi):
     
     return x, edge_attr, edge_index
 
+
 def load_representations(smiles, adduct_one_hot, ccs, vpa, mz):
     graph_adduct_data = []
     Index = 0
@@ -140,3 +151,23 @@ def load_representations(smiles, adduct_one_hot, ccs, vpa, mz):
         Index += 1
     return graph_adduct_data
 
+
+def load_representations_woeccs(smiles, adduct_one_hot, vpa, mz):
+    graph_adduct_data = []
+    Index = 0
+    for smi in tqdm(smiles):
+        
+        g_x, g_e, g_i = smiles2Graph(smi)
+        
+        one_graph = {}
+        one_graph['x'] = g_x
+        one_graph['edge_index'] = g_i
+        one_graph['edge_attr'] = g_e
+        
+        one_graph['adduct'] = adduct_one_hot[Index]
+        one_graph['vpa'] = torch.tensor([vpa[Index]], dtype=torch.float)
+        one_graph['mz'] = torch.tensor([mz[Index]], dtype=torch.float)
+        graph_adduct_data.append(one_graph)
+        
+        Index += 1
+    return graph_adduct_data
