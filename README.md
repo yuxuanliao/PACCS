@@ -1,16 +1,17 @@
 # PACCS
 
-This is the code repo for the paper *Accurate and Rational Collision Cross Section Prediction using Voxel Projected Area and Deep Learning*.  We developed a method named Projected Area-based CCS prediction method (PACCS), and a [dataset](data/the_curated_dataset.csv) including 8196 CCS values for three different ion adducts ([M+H]<sup>+</sup>, [M+Na]<sup>+</sup> and [M-H]<sup>-</sup>). For each molecule, there are SMILES, Adduct, True CCS, vpa, mz and predicted CCS values of three adduct ion types. 
+This is the code repo for the paper *Accurate and Rational Collision Cross Section Prediction using Voxel Projected Area and Deep Learning*. We developed a Projected Area-based CCS prediction method (PACCS) directly from molecular conformers. PACCS supports users to generate large-scale and searchable CCS databases using the open-source Jupyter Notebook.
 
-### Package required: 
+### Package required:
 We recommend to use [conda](https://conda.io/docs/user-guide/install/download.html) and [pip](https://pypi.org/project/pip/).
 - [python3](https://www.python.org/)
 - [pandas](https://pandas.pydata.org/)
 - [NumPy](https://numpy.org/)
-- [rdkit](https://rdkit.org/)
+- [RDKit](https://rdkit.org/)
 - [PyTorch](https://pytorch.org/)
+- [PyG](https://pytorch-geometric.readthedocs.io/en/latest/)
 
-By using the [`requirements/conda/environment.yml`](requirements/conda/environment.yml), [`requirements/pip/requirements.txt`](requirements/pip/requirements.txt) file, it will install all the required packages.
+By using the [`requirements/conda/environment.yml`](requirements/conda/environment.yml) or [`requirements/pip/requirements.txt`](requirements/pip/requirements.txt) file, it will install all the required packages.
 
     git clone https://github.com/yuxuanliao/PACCS.git
     cd PACCS
@@ -18,7 +19,7 @@ By using the [`requirements/conda/environment.yml`](requirements/conda/environme
     conda activate PACCS
 
 ## Data pre-processing
-PACCS is a model for predicting CCS based on voxel projected area (vpa), so we need to convert SMILES strings to vpa. The related method is shown in [MolecularRepresentations.py](PACCS/MolecularRepresentations.py), [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py) and [MZ.py](PACCS/MZ.py)        
+PACCS is a model for predicting CCS based on voxel projected area (vpa), so we need to convert SMILES strings to vpa. The related method is shown in [MolecularRepresentations.py](PACCS/MolecularRepresentations.py), [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py) and [MZ.py](PACCS/MZ.py)
 
 **1.** Generate 3D conformations of molecules. 
 
@@ -71,6 +72,5 @@ The example code for CCS prediction is included in the [CCS prediction.ipynb](CC
 The example code for CCS prediction can use PACCS to predict CCS values by colab link [prediction.ipynb](https://colab.research.google.com/drive/1iln8N-JnBtywVOcLsHyKY-ImmpuMTXTc)).
 
 ## Information of maintainers
-- zmzhang@csu.edu.cn
 - 232303012@csu.edu.cn
 - 1509200106@csu.edu.cn
