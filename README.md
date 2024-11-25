@@ -19,9 +19,9 @@ By using the [`requirements/conda/environment.yml`](requirements/conda/environme
     conda activate PACCS
 
 ## Data pre-processing
-PACCS is a model for predicting CCS based on voxel projected area (vpa), so we need to convert SMILES strings to vpa. The related method is shown in [MolecularRepresentations.py](PACCS/MolecularRepresentations.py), [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py) and [MZ.py](PACCS/MZ.py)
+PACCS calculates the projected area with the voxel-based approach, computes the m/z, and constructs the molecular graph. The related method is shown in [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py), [MZ.py](PACCS/MZ.py), and [MolecularRepresentations.py](PACCS/MolecularRepresentations.py). 
 
-**1.** Generate 3D conformations of molecules. 
+**1.** Generate 3D conformers of molecules.
 
     mol = Chem.MolFromSmiles(smiles)
     mol = Chem.AddHs(mol)
@@ -32,11 +32,11 @@ PACCS is a model for predicting CCS based on voxel projected area (vpa), so we n
     ps.useRandomCoords = True
     re = AllChem.EmbedMultipleConfs(mol, numConfs = 1, params = ps)
     re = AllChem.MMFFOptimizeMoleculeConfs(mol, numThreads = 0)
-- [ETKDGv3](https://www.rdkit.org/docs/source/rdkit.Chem.rdDistGeom.html?highlight=etkdgv3#rdkit.Chem.rdDistGeom.ETKDGv3) Returns an EmbedParameters object for the ETKDG method - version 3 (macrocycles).
-- [EmbedMultipleConfs](https://www.rdkit.org/docs/source/rdkit.Chem.rdDistGeom.html?highlight=embedmultipleconfs#rdkit.Chem.rdDistGeom.EmbedMultipleConfs), use distance geometry to obtain multiple sets of coordinates for a molecule.
-- [MMFFOptimizeMoleculeConfs](https://www.rdkit.org/docs/source/rdkit.Chem.rdForceFieldHelpers.html?highlight=mmffoptimizemoleculeconfs#rdkit.Chem.rdForceFieldHelpers.MMFFOptimizeMoleculeConfs), uses MMFF to optimize all of a molecule’s conformations
+- [ETKDGv3](https://www.rdkit.org/docs/source/rdkit.Chem.rdDistGeom.html?highlight=etkdgv3#rdkit.Chem.rdDistGeom.ETKDGv3) returns an EmbedParameters object for the ETKDG method - version 3 (macrocycles).
+- [EmbedMultipleConfs](https://www.rdkit.org/docs/source/rdkit.Chem.rdDistGeom.html?highlight=embedmultipleconfs#rdkit.Chem.rdDistGeom.EmbedMultipleConfs) generates the 3D conformers of molecules.
+- [MMFFOptimizeMoleculeConfs](https://www.rdkit.org/docs/source/rdkit.Chem.rdForceFieldHelpers.html?highlight=mmffoptimizemoleculeconfs#rdkit.Chem.rdForceFieldHelpers.MMFFOptimizeMoleculeConfs) optimizes the 3D conformers of molecules.
 
-**2.** Generate VPA. For details, see [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py). 
+**2.** Calculate voxel projected area. For details, see [VoxelProjectedArea.py](PACCS/VoxelProjectedArea.py). 
 
 <img src="Voxel projected area.png" width:100px>
 
@@ -50,19 +50,25 @@ Train the model based on your own training dataset with [Training.py](PACCS/Trai
     PACCS_train(input_path, epochs, batchsize, output_model_path)
 
 *Optionnal args*
-- input_path : File path for storing the data of smiles and adduct.
-- Parameters : Selected hyperparameters (epochs, batchsize).
+- input_path : File path for storing the data of SMILES and adduct.
+- Hyperparameters : optimized hyperparameters (epochs, batchsize).
 - output_model_path : File path where the model is stored.
 
 ## Predicting CCS
-The CCS prediction of the molecule is obtained by feeding the Graph and Adduct into the already trained SigmaCCS model with [Prediction.py](PACCS/Prediction.py).
+The predicted CCS values of molecules are obtained by feeding the voxel projected area, molecular graph, one-hot encoding of adduct type, and m/z into the already trained PACCS model with [Prediction.py](PACCS/Prediction.py).
 
     PACCS_predict(input_path, model_path, output_path)
 
 *Optionnal args*
-- input_path : File path for storing the data of smiles and adduct
-- model_path : File path where the model is stored
-- output_path : Path to save ccs prediction values
+- input_path : File path for storing the data of SMILES and adduct.
+- model_path : File path where the model is stored.
+- output_path : Path to save predicted CCS values.
+
+## Data
+- input_path : File path for storing the data of SMILES and adduct.
+- Hyperparameters : optimized hyperparameters (epochs, batchsize).
+- output_model_path : File path where the model is stored.
+A [curated dataset](data/the_curated_dataset.csv) is randomly split into the training, validation, and test sets in a ratio of 8:1:1
 
 ## Usage
 The example code for model training is included in the [Model training.ipynb](Model%20training.ipynb). By directly running [train.ipynb](PACCS/train.ipynb), user can train the model based on your own training dataset.
