@@ -6,6 +6,7 @@ Created on Tue Nov  5 00:22:05 2024
 """
 
 import pandas as pd
+from pandas import *
 import numpy as np
 import torch
 
@@ -17,6 +18,7 @@ from rdkit.Chem.rdchem import BondType as BT
 from tqdm import tqdm
 import PACCS.Parameters as parameter
 from multiprocessing.pool import ThreadPool
+import ast
 
 from PACCS.VoxelProjectedArea import *
 from PACCS.MZ import *
@@ -54,6 +56,46 @@ def input_data_woeccs(filename,):
     vpa = list(data['vpa'])
     mz = list(data['mz'])
     return smiles, adduct, vpa, mz
+
+
+def input_data_blengths(filename,):
+    data = pd.read_csv(filename)
+    smiles = list(data['SMILES'])
+    adduct = list(data['Adduct'])
+    ccs    = list(data['True CCS'])
+    if 'vpa' in data.columns:
+        vpa = list(data['vpa'])
+        bl = list(data['bond_lengths'])
+        bl2 = []
+        for i in range(len(bl)):
+            bi = bl[i]
+            bi2 = ast.literal_eval(bi)
+            bl2.append(bi2)
+    else:
+        pool = ThreadPool(16)
+        with tqdm(total = len(smiles)) as pbar:
+            re = []
+            bl2 = []
+            for result in pool.imap(smilesPA_blengths, smiles):
+                re.append(result[0])
+                bl2.append(result[1])
+                pbar.update()
+        pool.close()
+        pool.join()
+        
+        vpa = np.mean(re, axis=1)
+        data['vpa'] = vpa
+        data['bond_lengths'] = bl2
+        data.to_csv('./Data/input_data_vpa_blengths.csv', index=False)
+        
+    if 'mz' in data.columns:
+        mz = list(data['mz'])
+    else:
+        mz = SmilesMW(smiles, adduct)
+        data['mz'] = mz
+        data.to_csv('./Data/input_data_mz.csv', index=False)
+
+    return smiles, adduct, ccs, vpa, mz, bl2
 
 
 def Standardization(data):
@@ -127,6 +169,40 @@ def smiles2Graph(smi):
     return x, edge_attr, edge_index
 
 
+def smiles2Graph_blengths(smi, bond_lengths):
+    Atom_radius = Standardization(parameter.Atom_radius)
+    Atom_mass = Standardization(parameter.Atom_mass)   
+    
+    m = Chem.MolFromSmiles(smi)
+    mol = Chem.RemoveHs(m)
+
+    N = mol.GetNumAtoms()
+
+    x = []
+    for atom in mol.GetAtoms():
+        x.append(atom_feature_oneHot(atom, parameter.All_Atoms, Atom_radius, Atom_mass))
+    
+    row, col, edge_attr = [], [], []
+    for i, bond in enumerate(mol.GetBonds()):
+        start, end = bond.GetBeginAtomIdx(), bond.GetEndAtomIdx()
+        row += [start, end]
+        col += [end, start]
+        
+        bond_length = bond_lengths[i]
+        
+        edge_attr += 2 * [one_of_k_encoding_unk(bond.GetBondTypeAsDouble(), [1, 1.5, 2, 3]) + [bond_length]]
+    
+    x = torch.tensor(np.array(x), dtype=torch.float32)
+    edge_index = torch.tensor([row, col], dtype=torch.long)
+    edge_attr = torch.tensor(edge_attr, dtype=torch.float32)
+    
+    perm = (edge_index[0] * N + edge_index[1]).argsort()
+    edge_index = edge_index[:, perm]
+    edge_attr = edge_attr[perm]
+    
+    return x, edge_attr, edge_index
+
+
 def load_representations(smiles, adduct_one_hot, ccs, vpa, mz):
     graph_adduct_data = []
     Index = 0
@@ -164,6 +240,33 @@ def load_representations_woeccs(smiles, adduct_one_hot, vpa, mz):
         one_graph['edge_index'] = g_i
         one_graph['edge_attr'] = g_e
         
+        one_graph['adduct'] = adduct_one_hot[Index]
+        one_graph['vpa'] = torch.tensor([vpa[Index]], dtype=torch.float)
+        one_graph['mz'] = torch.tensor([mz[Index]], dtype=torch.float)
+        graph_adduct_data.append(one_graph)
+        
+        Index += 1
+    return graph_adduct_data
+
+
+def load_representations_blengths(smiles, adduct_one_hot, ccs, vpa, mz, blengths):
+    graph_adduct_data = []
+    Index = 0
+    for i in tqdm(range(len(smiles))):
+        smi = smiles[i]
+        bl = blengths[i]
+        
+        g_x, g_e, g_i = smiles2Graph_blengths(smi, bl)
+    
+        # label: true CCS
+        y = torch.tensor([ccs[Index]], dtype=torch.float)
+        
+        one_graph = {}
+        one_graph['x'] = g_x
+        one_graph['edge_index'] = g_i
+        one_graph['edge_attr'] = g_e
+        
+        one_graph['y'] = y
         one_graph['adduct'] = adduct_one_hot[Index]
         one_graph['vpa'] = torch.tensor([vpa[Index]], dtype=torch.float)
         one_graph['mz'] = torch.tensor([mz[Index]], dtype=torch.float)
